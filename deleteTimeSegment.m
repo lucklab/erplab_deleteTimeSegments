@@ -145,15 +145,16 @@ if rejectionWindowCount==1
 else
         rejectionWindows = joinclosesegments(rejectionWindows, [], 5);
         
-        colormatrej = repmat([200 0 0], size(rejectionWindows,1),1);
-        matrixrej = [rejectionWindows colormatrej chanrej];
-        
-        assignin('base', 'rejectionWindows', rejectionWindows)
-        fprintf('\n %g segments were marked.\n\n', size(rejectionWindows,1));
-        
-        commrej = sprintf('%s = eeg_eegrej( %s, rejectionWindows);', inputname(1), inputname(1));
-        
-        eegplot(EEG.data, 'winRej', matrixrej, 'srate', EEG.srate,'butlabel','REJECT','command', commrej,'events', EEG.event,'winlength', 75);
+%         chanrej         = zeros(EEG.nbchan, 1);
+%         colormatrej     = repmat([200 0 0], size(rejectionWindows,1),1);
+%         matrixrej       = [rejectionWindows colormatrej chanrej];
+%         
+%         assignin('base', 'rejectionWindows', rejectionWindows)
+%         fprintf('\n %g segments were marked.\n\n', size(rejectionWindows,1));
+%         
+%         commrej = sprintf('%s = eeg_eegrej( %s, rejectionWindows);', inputname(1), inputname(1));
+%         
+%         eegplot(EEG.data, 'winRej', matrixrej, 'srate', EEG.srate,'butlabel','REJECT','command', commrej,'events', EEG.event,'winlength', 75);
 
         
         
