@@ -25,7 +25,7 @@
 % Example
 %  Delete segment of data between two 'boundary' event codes when it is longer than 3000 ms (3 secs).
 %
-% EEG = deleteTimeSegment(EEG, 3000, 100, 200, []);
+% EEG = deleteTimeSegment(EEG, 'boundary', 3000);
 %
 %
 % *** This function is part of ERPLAB Toolbox ***
