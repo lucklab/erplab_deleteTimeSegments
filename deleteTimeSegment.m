@@ -5,27 +5,30 @@
 %
 % USAGE
 %
-% EEG               = deleteTimeSegment(EEG, inputMaxDistanceMS, inputStartPeriodBufferMS, inputEndPeriodBufferMS, ignoreEventCodes);
-
+% EEG = deleteTimeSegment(EEG, inputMaxDistanceMS, inputStartPeriodBufferMS, inputEndPeriodBufferMS, ignoreEventCodes);
+%
 %
 % Input:
 %
-% EEG                       - continuous EEG dataset (EEGLAB's EEG structure)
-% inputMaxDistanceMS        - 
-% inputStartPeriodBufferMS  -
-% inputEndPeriodBufferMS    -
-% ignoreEventCodes          -
+%  EEG                      - continuous EEG dataset (EEGLAB's EEG structure)
+%  maxDistanceMS            - 
+%  startEventCodeBufferMS   -
+%  endEventCodeBufferMS     - 
 %
+% Optional
+%  ignoreEventCodes         - (cell array for character 
+%  displayEEGPLOTGUI        - (true|false)
 %
 % Output:
 %
-% EEG         - continuous EEG dataset  (EEGLAB's EEG structure)
+% EEG                       - continuous EEG dataset  (EEGLAB's EEG structure)
 %
 %
-% Example
-%  Delete segment of data between two 'boundary' event codes when it is longer than 3000 ms (3 secs).
+% Example:
+%  
+%      EEG = deleteTimeSegment(EEG, 3000, 100, 200, []);   % Delete segment of data between any two event codes when it is longer than 3000 ms (3 secs).
 %
-% EEG = deleteTimeSegment(EEG, 3000, 100, 200, []);
+% 
 %
 %
 % *** This function is part of ERPLAB Toolbox ***
@@ -56,21 +59,43 @@
 % You should have received a copy of the GNU General Public License
 % along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-function [EEG, rejectionWindows] = deleteTimeSegment(EEG, inputMaxDistanceMS, inputStartPeriodBufferMS, inputEndPeriodBufferMS, ignoreEventCodes )
+function [EEG, rejectionWindows] = deleteTimeSegment(EEG, inputMaxDistanceMS, inputStartPeriodBufferMS, inputEndPeriodBufferMS, varargin)
 
+
+% Error check the input variables
 if nargin<1
-        help deleteTimeSegment
-        return
-elseif nargin<5
-        error('ERPLAB says: deleteTimeSegment.m needs 5 inputs.')
+    help deleteTimeSegment
+    return
+elseif nargin<4
+    error('ERPLAB:deleteTimeSegment: needs 5 inputs.')
+elseif length(varargin) > 2                                      % only want 3 optional inputs at most
+    error('ERPLAB:deleteTimeSegment:TooManyInputs', ...
+        'requires at most 2 optional inputs');
 else
-  disp('Working...')
+    disp('Working...')
 end
 
 if length(EEG.event)<1
         fprintf('\ndelshortseg.m did not find remaining event codes.\n')
         return
 end
+
+
+
+% Hand optional variables
+
+optargs = {[] false}; % Default optional inputs
+
+
+% now put these defaults into the valuesToUse cell array, 
+% and overwrite the ones specified in varargin.
+optargs(1:length(varargin)) = varargin;     % if vargin is empty, optargs keep their default values. If vargin is specified then it overwrites 
+
+% Place optional args into variable names
+[ignoreEventCodes, eegplotGUIFeedback] = optargs{:};
+
+
+
 
 
 % Convert all timing info to samples
@@ -147,22 +172,23 @@ rejectionWindows(any(rejectionWindows==0,2),:) = []; % trim empty rows
 if rejectionWindowCount==1
         fprintf('\nNote: No large segment was found.\n')
 else
-        rejectionWindows = joinclosesegments(rejectionWindows, [], 5);
+        rejectionWindows = ERPLAB403joinclosesegments(rejectionWindows, [], 5);
         
-%         chanrej         = zeros(EEG.nbchan, 1);
-%         colormatrej     = repmat([200 0 0], size(rejectionWindows,1),1);
-%         matrixrej       = [rejectionWindows colormatrej chanrej];
-%         
-%         assignin('base', 'rejectionWindows', rejectionWindows)
-%         fprintf('\n %g segments were marked.\n\n', size(rejectionWindows,1));
-%         
-%         commrej = sprintf('%s = eeg_eegrej( %s, rejectionWindows);', inputname(1), inputname(1));
-%         
-%         eegplot(EEG.data, 'winRej', matrixrej, 'srate', EEG.srate,'butlabel','REJECT','command', commrej,'events', EEG.event,'winlength', 75);
-
+        if eegplotGUIFeedback
+            % Plot EEG data with to-be-rejected time windows
+            rejectionWindowChannelMatrix    = zeros(size(rejectionWindows,1),EEG.nbchan, 1);                                % do not mark any channel in EEGPLOT
+            rejectionWindowColorMatrix      = repmat([1 0 0], size(rejectionWindows,1),1);                                  % color matrix for EEGPLOT highlighting
+            rejectionWindowMatrix           = [rejectionWindows rejectionWindowColorMatrix rejectionWindowChannelMatrix];   % combined rejection window highlighting for EEGPLOT
+            rejectionCommand                = sprintf('%s = eeg_eegrej( %s, rejectionWindows);', 'EEG', 'EEG');             % inputname(1), inputname(1));
+            
+            assignin('base', 'rejectionWindows', rejectionWindows); % not sure why this is needed
+            eegplot(EEG.data, 'winrej', rejectionWindowMatrix, 'srate', EEG.srate,'butlabel','REJECT','command', rejectionCommand,'events', EEG.event,'winlength', 75);
+            fprintf('\n %g rejection segments marked.\n\n', size(rejectionWindows,1));
+        else
+            EEG = eeg_eegrej( EEG, rejectionWindows);
+        end
         
         
-        EEG = eeg_eegrej( EEG, rejectionWindows);
 end
 
 % get rid of the first boundary when is on the first sample.

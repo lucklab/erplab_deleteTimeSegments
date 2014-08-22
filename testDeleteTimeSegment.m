@@ -23,7 +23,7 @@ classdef testDeleteTimeSegment < matlab.unittest.TestCase
             eventBufferEnd      = 400;
             ignoredEventCodes   = [];
             
-            [outputEEG rejectionWindows] = deleteTimeSegment(EEG, timeThreshold, eventBufferStart, eventBufferEnd, ignoredEventCodes);
+            [outputEEG rejectionWindows] = deleteTimeSegment(EEG, timeThreshold, eventBufferStart, eventBufferEnd, ignoredEventCodes, true);
             
             
             eegplot(EEG.data, 'winrej', matrixrej, 'srate', EEG.srate,'butlabel','REJECT','command', commrej,'events', EEG.event,'winlength', 75);
