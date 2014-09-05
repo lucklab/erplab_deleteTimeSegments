@@ -213,15 +213,22 @@ else
             rejectionWindowChannelMatrix    = zeros(size(rejectionWindows,1),EEG.nbchan, 1);                                % do not mark any channel in EEGPLOT
             rejectionWindowColorMatrix      = repmat([.5 .5 .5], size(rejectionWindows,1),1);                                  % color matrix for EEGPLOT highlighting
             rejectionWindowMatrix           = [rejectionWindows rejectionWindowColorMatrix rejectionWindowChannelMatrix];   % combined rejection window highlighting for EEGPLOT
-            rejectionCommand                = sprintf('%s = eeg_eegrej( %s, rejectionWindows);', inputname(1), inputname(1));             % inputname(1), inputname(1));
+
+            % Rejection command feature removed because I can't get it to
+            % work.
+            %             rejectionCommand                = sprintf('%s = eeg_eegrej( %s, rejectionWindows);', inputname(1), inputname(1));             % inputname(1), inputname(1));
+            %             assignin('base', 'rejectionWindows', rejectionWindows); % not sure why this is needed. Perhaps for the rejectionCommand
+            %             eegplot(EEG.data, 'winrej', rejectionWindowMatrix, 'srate', EEG.srate,'butlabel','REJECT','command', rejectionCommand,'events', EEG.event,'winlength', 50);
             
-            assignin('base', 'rejectionWindows', rejectionWindows); % not sure why this is needed. Perhaps for the rejectionCommand
-            eegplot(EEG.data, 'winrej', rejectionWindowMatrix, 'srate', EEG.srate,'butlabel','REJECT','command', rejectionCommand,'events', EEG.event,'winlength', 50);
+            
+            eegplot(EEG.data, 'winrej', rejectionWindowMatrix, 'srate', EEG.srate,'events', EEG.event,'winlength', 50, 'spacing', 100);
+
             fprintf('\n %g rejection segments marked.\n\n', size(rejectionWindows,1));
-        else
-            EEG = eeg_eegrej( EEG, rejectionWindows);
+
         end
         
+        EEG = eeg_eegrej( EEG, rejectionWindows);
+
         
 end
 
