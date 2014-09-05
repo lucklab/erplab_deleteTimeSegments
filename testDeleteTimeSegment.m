@@ -10,7 +10,7 @@ classdef testDeleteTimeSegment < matlab.unittest.TestCase
             testFileName = 'P3Test.set';
             testFilePath = './testFiles';
             
-            eeglab;
+            %             eeglab;
             EEG = pop_loadset( ...
                   'filename', testFileName ...
                 , 'filepath', testFilePath );
@@ -19,14 +19,15 @@ classdef testDeleteTimeSegment < matlab.unittest.TestCase
             
             
             timeThreshold       = 3000;
-            eventBufferStart    = 200;
-            eventBufferEnd      = 400;
+            eventBufferStart    = 1000;
+            eventBufferEnd      = 1000;
             ignoredEventCodes   = [];
             
-            [outputEEG rejectionWindows] = deleteTimeSegment(EEG, timeThreshold, eventBufferStart, eventBufferEnd, ignoredEventCodes, true);
+            [outputEEG, ~] = JFAdeleteTimeSegment(EEG, timeThreshold, eventBufferStart, eventBufferEnd, ignoredEventCodes, true);
             
-            
-            eegplot(EEG.data, 'winrej', matrixrej, 'srate', EEG.srate,'butlabel','REJECT','command', commrej,'events', EEG.event,'winlength', 75);
+            eegplot(outputEEG.data, 'srate', outputEEG.srate,'events', outputEEG.event,'winlength', 75, 'spacing', 200)
+%             eegplot(EEG.data, 'winrej', matrixrej, 'srate', EEG.srate,'butlabel','REJECT','command', commrej,'events', EEG.event,'winlength', 75);
+%             eegplot(EEG.data, 'srate', EEG.srate,'events', EEG.event,'winlength', 75, 'spacing', 200)
 
         end
         
@@ -45,10 +46,11 @@ classdef testDeleteTimeSegment < matlab.unittest.TestCase
             timeThreshold       = 3000;
             eventBufferStart    = 200;
             eventBufferEnd      = 400;
-            ignoredEventCodes   = [];
+            ignoredEventCodes   = 202;
             
-            outputEEG = deleteTimeSegment(EEG, timeThreshold, eventBufferStart, eventBufferEnd, ignoredEventCodes);
-            
+            outputEEG = JFAdeleteTimeSegment(EEG, timeThreshold, eventBufferStart, eventBufferEnd, ignoredEventCodes);
+            eegplot(outputEEG.data, 'srate', outputEEG.srate,'events', outputEEG.event,'winlength', 75, 'spacing', 200)
+
             
             
         end

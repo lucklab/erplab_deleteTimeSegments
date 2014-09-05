@@ -1,11 +1,11 @@
-% deleteTimeSegment.m (alpha version)
+% JFAdeleteTimeSegment.m (alpha version)
 %
 % Deletes segment of data between 2 event codes (string or number) if the size of the segment
 % is greater than a specified time (in msec)
 %
 % USAGE
 %
-% EEG = deleteTimeSegment(EEG, inputMaxDistanceMS, inputStartPeriodBufferMS, inputEndPeriodBufferMS, ignoreEventCodes);
+% EEG = JFAdeleteTimeSegment(EEG, inputMaxDistanceMS, inputStartPeriodBufferMS, inputEndPeriodBufferMS, ignoreEventCodes);
 %
 %
 % Input:
@@ -26,7 +26,7 @@
 %
 % Example:
 %  
-%      EEG = deleteTimeSegment(EEG, 3000, 100, 200, []);   % Delete segment of data between any two event codes when it is longer than 3000 ms (3 secs).
+%      EEG = JFAdeleteTimeSegment(EEG, 3000, 100, 200, []);   % Delete segment of data between any two event codes when it is longer than 3000 ms (3 secs).
 %
 % 
 %
@@ -59,17 +59,17 @@
 % You should have received a copy of the GNU General Public License
 % along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-function [EEG, rejectionWindows] = deleteTimeSegment(EEG, inputMaxDistanceMS, inputStartPeriodBufferMS, inputEndPeriodBufferMS, varargin)
+function [EEG, rejectionWindows] = JFAdeleteTimeSegment(EEG, inputMaxDistanceMS, inputStartPeriodBufferMS, inputEndPeriodBufferMS, varargin)
 
 
 % Error check the input variables
 if nargin<1
-    help deleteTimeSegment
+    help JFAdeleteTimeSegment
     return
 elseif nargin<4
-    error('ERPLAB:deleteTimeSegment: needs 5 inputs.')
+    error('ERPLAB:JFAdeleteTimeSegment: needs 5 inputs.')
 elseif length(varargin) > 2                                      % only want 3 optional inputs at most
-    error('ERPLAB:deleteTimeSegment:TooManyInputs', ...
+    error('ERPLAB:JFAdeleteTimeSegment:TooManyInputs', ...
         'requires at most 2 optional inputs');
 else
     disp('Working...')
@@ -83,7 +83,6 @@ end
 
 
 % Hand optional variables
-
 optargs = {[] false}; % Default optional inputs
 
 
@@ -97,14 +96,25 @@ optargs(1:length(varargin)) = varargin;     % if vargin is empty, optargs keep t
 
 
 
+% Insert event codes at the beginning and end of the EEG data set
+% eegEdgeEventCode    = 9999;
+% startTime           = EEG.xmin;
+% endTime             = EEG.xmax;
+% firstEventCode      = 1;
+% lastEventCode       = length(EEG.event);
+% % newLastEventCode    = lastEventCode + 1;
+
+% EEG = pop_editeventvals(EEG,'insert',{firstEventCode [] [] []}   ,'changefield', {firstEventCode    'type' eegEdgeEventCode},'changefield',{firstEventCode    'latency' startTime   });
+% EEG = pop_editeventvals(EEG,'insert',{lastEventCode  [] [] []}   ,'changefield', {lastEventCode + 1 'type' eegEdgeEventCode},'changefield',{lastEventCode + 1 'latency' endTime     });
+
 
 % Convert all timing info to samples
 
-% analyzedEventCodes = unique({EEG.event.type});
-% inputMaxDistanceMS       = 3000;     % (ms)
-% inputStartPeriodBufferMS = 100;      % (ms)
-% inputEndPeriodBufferMS  = 200;      % (ms)
-% ignoreEventCodes    = {'9'};      % (event numbers)
+% analyzedEventCodes        = unique({EEG.event.type});
+% inputMaxDistanceMS        = 3000;     % (ms)
+% inputStartPeriodBufferMS  = 100;      % (ms)
+% inputEndPeriodBufferMS    = 200;      % (ms)
+% ignoreEventCodes          = {'9'};      % (event numbers)
 
 
 maxDistanceSample       = round(inputMaxDistanceMS       *(EEG.srate/1000));  % ms to samples
@@ -134,13 +144,13 @@ endPeriodBufferSample   = round(inputEndPeriodBufferMS   *(EEG.srate/1000));  % 
 
 
 if ischar(EEG.event(1).type)
-    analyzedEventCodes    = setdiff({EEG.event.type}, ignoreEventCodes);                        % Filter out the ignored event code
-    analyzedEventIndices  = ismember({EEG.event.type}, analyzedEventCodes);                       % 
-    analyzedSamples       = round([EEG.event(analyzedEventIndices).latency]);                     % Convert event codes to samples
+    analyzedEventCodes    = setdiff({EEG.event.type}, ignoreEventCodes);                            % Filter out the ignored event code
+    analyzedEventIndices  = ismember({EEG.event.type}, analyzedEventCodes);                         % 
+    analyzedSamples       = round([EEG.event(analyzedEventIndices).latency]);                       % Convert event codes to samples
 else
-    analyzedEventCodes    = setdiff([EEG.event.type], ignoreEventCodes);                        % Filter out the ignored event code
-    analyzedEventIndices  = ismember([EEG.event.type], analyzedEventCodes);                       % 
-    analyzedSamples       = round([EEG.event(analyzedEventIndices).latency]);                     % Convert event codes to samples
+    analyzedEventCodes    = setdiff([EEG.event.type], ignoreEventCodes);                            % Filter out the ignored event code
+    analyzedEventIndices  = ismember([EEG.event.type], analyzedEventCodes);                         % 
+    analyzedSamples       = round([EEG.event(analyzedEventIndices).latency]);                       % Convert event codes to samples
 end
 
 
@@ -151,38 +161,62 @@ if analyzedSamples(end) ~= EEG.pnts
     analyzedSamples(end+1) = EEG.pnts; % add the last sample
 end
 
-lastSample              = 1;
+lastSampleAnalyzed      = 1;
 rejectionWindows        = zeros(length(analyzedSamples), 2); % [];
 rejectionWindowCount    = 0;
+samplesStart            = 1;
+samplesEnd              = analyzedSamples(end);
 
-
+% Original Code:
+% --------------
 % look for large segments
-for ii=1:length(analyzedSamples)
-        if abs(analyzedSamples(ii)-lastSample)>=maxDistanceSample
-                t1          = lastSample;
-                t2          = analyzedSamples(ii);
-                rejectionWindows(rejectionWindowCount+1,:)  = [t1+startPeriodBufferSample t2-endPeriodBufferSample];
+% for segmentIndex=1:length(analyzedSamples)
+%         if abs(analyzedSamples(segmentIndex)-lastSample) >= maxDistanceSample
+%                 t1          = lastSample;
+%                 t2          = analyzedSamples(segmentIndex);
+%                 rejectionWindows(rejectionWindowCount+1,:)  = [t1+startPeriodBufferSample t2-endPeriodBufferSample];
+%                 rejectionWindowCount=rejectionWindowCount+1;
+%         end
+%         lastSample = analyzedSamples(segmentIndex);
+% end
+
+% Main Algorithm: Look for time/sample segments that exceed the MAXDISTANCESAMPLE
+for currentSegmentNum=1:length(analyzedSamples)
+    
+        if abs(analyzedSamples(currentSegmentNum)-lastSampleAnalyzed) >= maxDistanceSample
+                t1          = lastSampleAnalyzed;
+                t2          = analyzedSamples(currentSegmentNum);
+                
+                if(     t1 == samplesStart)
+                    rejectionWindows(rejectionWindowCount+1,:)  = [t1                           t2-endPeriodBufferSample    ];  % Do not use buffer for the first sample (ie. start of the EEG dataset)
+                elseif( t2 == samplesEnd ) 
+                    rejectionWindows(rejectionWindowCount+1,:)  = [t1+startPeriodBufferSample   t2                          ];  % Do not use buffer for the last sample (ie. end of the EEG dataset)
+                else
+                    rejectionWindows(rejectionWindowCount+1,:)  = [t1+startPeriodBufferSample   t2-endPeriodBufferSample    ];
+                end
+                
                 rejectionWindowCount=rejectionWindowCount+1;
         end
-        lastSample = analyzedSamples(ii);
+        lastSampleAnalyzed = analyzedSamples(currentSegmentNum);
 end
+
 
 rejectionWindows(any(rejectionWindows==0,2),:) = []; % trim empty rows
 
 if rejectionWindowCount==1
         fprintf('\nNote: No large segment was found.\n')
 else
-        rejectionWindows = ERPLAB403joinclosesegments(rejectionWindows, [], 5);
+        rejectionWindows = JFAjoinclosesegments(rejectionWindows, [], 5);
         
         if eegplotGUIFeedback
             % Plot EEG data with to-be-rejected time windows
             rejectionWindowChannelMatrix    = zeros(size(rejectionWindows,1),EEG.nbchan, 1);                                % do not mark any channel in EEGPLOT
-            rejectionWindowColorMatrix      = repmat([1 0 0], size(rejectionWindows,1),1);                                  % color matrix for EEGPLOT highlighting
+            rejectionWindowColorMatrix      = repmat([.5 .5 .5], size(rejectionWindows,1),1);                                  % color matrix for EEGPLOT highlighting
             rejectionWindowMatrix           = [rejectionWindows rejectionWindowColorMatrix rejectionWindowChannelMatrix];   % combined rejection window highlighting for EEGPLOT
-            rejectionCommand                = sprintf('%s = eeg_eegrej( %s, rejectionWindows);', 'EEG', 'EEG');             % inputname(1), inputname(1));
+            rejectionCommand                = sprintf('%s = eeg_eegrej( %s, rejectionWindows);', inputname(1), inputname(1));             % inputname(1), inputname(1));
             
-            assignin('base', 'rejectionWindows', rejectionWindows); % not sure why this is needed
-            eegplot(EEG.data, 'winrej', rejectionWindowMatrix, 'srate', EEG.srate,'butlabel','REJECT','command', rejectionCommand,'events', EEG.event,'winlength', 75);
+            assignin('base', 'rejectionWindows', rejectionWindows); % not sure why this is needed. Perhaps for the rejectionCommand
+            eegplot(EEG.data, 'winrej', rejectionWindowMatrix, 'srate', EEG.srate,'butlabel','REJECT','command', rejectionCommand,'events', EEG.event,'winlength', 50);
             fprintf('\n %g rejection segments marked.\n\n', size(rejectionWindows,1));
         else
             EEG = eeg_eegrej( EEG, rejectionWindows);
