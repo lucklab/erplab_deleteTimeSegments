@@ -16,7 +16,7 @@
 %  endEventCodeBufferMS     - time buffer around last event code
 %
 % Optional
-%  ignoreEventCodes         - 
+%  ignoreEventCodes         - array of event code numbers to ignore
 %  displayEEGPLOTGUI        - (true|false)
 %
 % Output:
@@ -111,23 +111,7 @@ else
     analyzedSamples       = round([EEG.event(analyzedEventIndices).latency]);                   % Convert event codes to samples
 end
 
-% if  iscell(analyzedEventCodes)
-%         % latx  = strmatch(analyzedEventCodes, {EEG.event.type}, 'exact');
-%         try
-%                 latx  = find(ismember({EEG.event.type}, analyzedEventCodes));
-%         catch
-%                 error('ERPLAB: Your specified code must have the same format as your event codes (string or numeric).')
-%         end
-% elseif ischar(EEG.event(1).type) && ischar(analyzedEventCodes)
-%         latx = find(ismember({EEG.event.type}, {analyzedEventCodes}));
-% elseif ~ischar(EEG.event(1).type) && isnumeric(analyzedEventCodes)
-%         latx = find(ismember([EEG.event.type], analyzedEventCodes));
-% else
-%         error('ERPLAB: Your specified code must have the same format as your event codes (string or numeric).')
-% end
 
-
-% analyzedSamples = round([EEG.event.latency]);
 if analyzedSamples(1) ~= 1
     analyzedSamples = [1 analyzedSamples];          % add first time point index
 end
@@ -158,6 +142,9 @@ for ii=1:length(analyzedSamples)
         else
             rejWindowMin = t1 + startPeriodBufferSample;
             rejWindowMax = t2 - endPeriodBufferSample;
+            
+            % Test to ensure overlapping buffer windows do not delete
+            % the overlapping time segment
             if rejWindowMin < rejWindowMax
                 rejWin  = [rejWindowMin rejWindowMax];
             else
