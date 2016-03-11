@@ -1,11 +1,11 @@
-% JFAdeleteTimeSegment.m (alpha version)
+% erplabDeleteInterEventTimeSegments.m (alpha version)
 %
 % Deletes segment of data between 2 event codes (string or number) if the size of the segment
 % is greater than a specified time (in msec)
 %
 % USAGE
 %
-% EEG = JFAdeleteTimeSegment(EEG, inputMaxDistanceMS, inputStartPeriodBufferMS, inputEndPeriodBufferMS, ignoreEventCodes);
+% EEG = erplabDeleteInterEventTimeSegments(EEG, inputMaxDistanceMS, inputStartPeriodBufferMS, inputEndPeriodBufferMS, ignoreEventCodes);
 %
 %
 % Input:
@@ -26,7 +26,7 @@
 %
 % Example:
 %  
-%      EEG = JFAdeleteTimeSegment(EEG, 3000, 100, 200, []);   % Delete segment of data between any two event codes when it is longer than 3000 ms (3 secs).
+%      EEG = erplabDeleteInterEventTimeSegments(EEG, 3000, 100, 200, []);   % Delete segment of data between any two event codes when it is longer than 3000 ms (3 secs).
 %
 % 
 %
@@ -59,17 +59,17 @@
 % You should have received a copy of the GNU General Public License
 % along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-function [EEG, rejectionWindows] = JFAdeleteTimeSegment(EEG, inputMaxDistanceMS, inputStartPeriodBufferMS, inputEndPeriodBufferMS, varargin)
+function [EEG, rejectionWindows] = erplabDeleteInterEventTimeSegments(EEG, inputMaxDistanceMS, inputStartPeriodBufferMS, inputEndPeriodBufferMS, varargin)
 
 
 % Error check the input variables
 if nargin<1
-    help JFAdeleteTimeSegment
+    help erplabDeleteInterEventTimeSegments
     return
 elseif nargin<4
-    error('ERPLAB:JFAdeleteTimeSegment: needs 5 inputs.')
+    error('ERPLAB:erplabDeleteInterEventTimeSegments: needs 5 inputs.')
 elseif length(varargin) > 2                                      % only want 3 optional inputs at most
-    error('ERPLAB:JFAdeleteTimeSegment:TooManyInputs', ...
+    error('ERPLAB:erplabDeleteInterEventTimeSegments:TooManyInputs', ...
         'requires at most 2 optional inputs');
 else
     disp('Working...')
