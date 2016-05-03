@@ -1,11 +1,11 @@
-% erplabDeleteInterEventTimeSegments.m
+% erplab_deleteTimeSegments.m
 %
 % Deletes data segments between 2 event codes (string or number) if the size of the segment
 % is greater than a user-specified threshold (in msec)
 %
 % USAGE
 %
-% EEG = erplabDeleteInterEventTimeSegments(EEG, inputMaxDistanceMS, inputStartPeriodBufferMS, inputEndPeriodBufferMS, ignoreEventCodes);
+% EEG = erplab_deleteTimeSegments(EEG, inputMaxDistanceMS, inputStartPeriodBufferMS, inputEndPeriodBufferMS, ignoreEventCodes);
 %
 %
 % Input:
@@ -27,7 +27,7 @@
 % Example: Delete segment of data between any two event codes when it is 
 %          longer than 3000 ms (3 secs).
 %
-%      EEG = erplabDeleteInterEventTimeSegments(EEG, 3000, 100, 200, []);   
+%      EEG = erplab_deleteTimeSegments(EEG, 3000, 100, 200, []);   
 %
 %
 %
@@ -60,17 +60,17 @@
 % You should have received a copy of the GNU General Public License
 % along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-function [EEG, rejectionWindows] = erplabDeleteInterEventTimeSegments(EEG, inputMaxDistanceMS, inputStartPeriodBufferMS, inputEndPeriodBufferMS, varargin)
+function [EEG, rejectionWindows] = erplab_deleteTimeSegments(EEG, inputMaxDistanceMS, inputStartPeriodBufferMS, inputEndPeriodBufferMS, varargin)
 
 
 % Error check the input variables
 if nargin<1
-    help erplabDeleteInterEventTimeSegments
+    help erplab_deleteTimeSegments
     return
 elseif nargin<4
-    error('ERPLAB:erplabDeleteInterEventTimeSegments: needs 4 inputs.')
+    error('ERPLAB:erplab_deleteTimeSegments: needs 4 inputs.')
 elseif length(varargin) > 2                                      % only want 3 optional inputs at most
-    error('ERPLAB:erplabDeleteInterEventTimeSegments:TooManyInputs', ...
+    error('ERPLAB:erplab_deleteTimeSegments:TooManyInputs', ...
         'requires at most 2 optional inputs');
 else
     disp('Working...')
