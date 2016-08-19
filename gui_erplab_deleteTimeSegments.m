@@ -133,9 +133,12 @@ handles.replaceChannels    = '[]';
 handles.ignoreChannels     = '[]';
 handles.interpolationMethod = 'spherical';
  
-set(handles.editbox_maxDistanceMS,     'String',         num2str(handles.replaceChannels));
-set(handles.editbox_startEventCodeBufferMS,      'String',         num2str(handles.ignoreChannels));
-set(handles.uipanel_interpolationMethod, 'SelectedObject', handles.radiobutton_spherical);
+set(handles.editbox_maxDistanceMS...
+    , 'String', num2str(handles.replaceChannels));
+set(handles.editbox_startEventCodeBufferMS ...
+    , 'String', num2str(handles.ignoreChannels));
+set(handles.interpolationMethod ...
+    , 'SelectedObject', handles.radiobutton_spherical);
 
 
 %
