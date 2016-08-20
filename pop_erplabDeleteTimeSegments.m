@@ -1,4 +1,4 @@
-function [outputEEG, commandHistory] = pop_erplab_deleteTimeSegments( inputEEG, varargin )
+function [outputEEG, commandHistory] = pop_erplabDeleteTimeSegments( inputEEG, varargin )
 % Deletes data segments between 2 event codes if the size of the segment
 % is greater than a user-specified threshold (in msec)
 %
@@ -45,7 +45,7 @@ function [outputEEG, commandHistory] = pop_erplab_deleteTimeSegments( inputEEG, 
 
 %% Return help if given no input
 if nargin < 1
-    help pop_erplab_deleteTimeSegments
+    help pop_erplabDeleteTimeSegments
     return
 end
 
@@ -61,7 +61,62 @@ end
 %% Call GUI
 % When only 1 input is given the GUI is then called
 if nargin==1
-    runGUI(inputEEG);
+     % Input validation setttings
+    serror = erplab_eegscanner(inputEEG, 'pop_erplabDeleteTimeSegments',...
+        0, ... % 0 = do not accept md;
+        0, ... % 0 = do not accept empty dataset;
+        0, ... % 0 = do not accept epoched EEG;
+        0, ... % 0 = do not accept if no event codes
+        2);    % 2 = do not care if there exists an ERPLAB EVENTLIST struct
+
+    % Quit if there is an error with the input EEG
+    if serror; return; end
+
+    % Get previous input parameters
+    def  = erpworkingmemory('pop_erplabDeleteTimeSegments');
+    if isempty(def); def = {}; end % if no parameters, clear DEF var
+
+    %% Call GUI: gui_erplabDeleteTimeSegments to get the input parameters
+    inputstrMat = gui_erplabDeleteTimeSegments(def);  % GUI
+
+    % Exit when CANCEL button is pressed
+    if isempty(inputstrMat) && ~strcmp(inputstrMat,'')
+        commandHistory = 'User selected cancel';
+        return;
+    end
+
+    maxDistanceMS             = inputstrMat{1};
+    startEventCodeBufferMS    = inputstrMat{2};
+    endEventCodeBufferMS      = inputstrMat{3};
+    ignoreEventCodes          = inputstrMat{4}; 
+    displayEEG                = inputstrMat{5};
+
+    % Save the GUI inputs to memory
+    erpworkingmemory('pop_erplabDeleteTimeSegments',    ...
+        { maxDistanceMS,                                ...
+          startEventCodeBufferMS,                       ...
+          endEventCodeBufferMS,                         ...
+          ignoreEventCodes,                             ...
+          displayEEG });
+    
+
+    % New output EEG name
+    if length(inputEEG)==1
+        inputEEG.setname = [inputEEG.setname '_interpolated'];
+    end
+
+    
+    %% Execute POP_ERPLABDELETETIMESEGMENTS 
+    [outputEEG, commandHistory] = pop_erplabDeleteTimeSegments(inputEEG,   ...
+        'maxDistanceMS'             , maxDistanceMS,            ...
+        'startEventCodeBufferMS'    , startEventCodeBufferMS,   ...
+        'endEventCodeBufferMS'      , endEventCodeBufferMS,     ...
+        'ignoreEventCodes'          , ignoreEventCodes,         ...
+        'displayEEG'                , displayEEG,               ...
+        'History'                   , 'gui');
+    
+    
+    return;
 end
 
 
@@ -83,11 +138,11 @@ inputParameters.CaseSensitive = false;
 inputParameters.addRequired('inputEEG');
 
 % Optional named parameters (vs Positional Parameters)
-inputParameters.addParameter('maxDistanceMS'            , 0, @isinteger);
-inputParameters.addParameter('startEventCodeBufferMS'   , 0, @isinteger);
-inputParameters.addParameter('endEventCodeBufferMS'     , 0, @isinteger);
+inputParameters.addParameter('maxDistanceMS'            , 0);
+inputParameters.addParameter('startEventCodeBufferMS'   , 0);
+inputParameters.addParameter('endEventCodeBufferMS'     , 0);
 inputParameters.addParameter('ignoreEventCodes'         , []);
-inputParameters.addParameter('displayEEG'               , false, @islogical);
+inputParameters.addParameter('displayEEG'               , false);
 inputParameters.addParameter('History'                  , 'script', @ischar); % history from scripting
 
 inputParameters.parse(inputEEG, varargin{:});
@@ -125,9 +180,9 @@ outputEEG = erplab_deleteTimeSegments(inputEEG ...
 %
 
 commandHistory  = '';
-skipfields      = {'EEG', 'DisplayFeedback', 'History'};
+skipfields      = {'inputEEG', 'DisplayFeedback', 'History'};
 fn              = fieldnames(inputParameters.Results);
-commandHistory         = sprintf( '%s  = pop_erplab_deleteTimeSegments( %s ', inputname(1), inputname(1));
+commandHistory         = sprintf( '%s  = pop_erplabDeleteTimeSegments( %s ', inputname(1), inputname(1));
 for q=1:length(fn)
     fn2com = fn{q}; % get fieldname
     if ~ismember(fn2com, skipfields)
@@ -195,56 +250,7 @@ return
 end
 
 function runGUI(EEG)
-% Input validation
-serror = erplab_eegscanner(EEG, 'pop_erplab_deleteTimeSegments',...
-    0, ... % 0 = do not accept md;
-    0, ... % 0 = do not accept empty dataset;
-    0, ... % 0 = do not accept epoched EEG;
-    0, ... % 0 = do not accept if no event codes
-    2);    % 2 = do not care if there exists an ERPLAB EVENTLIST struct
-
-% Quit if there is an error with the input EEG
-if serror
-    return
-end
-
-% Get previous input parameters
-def  = erpworkingmemory('pop_erplab_deleteTimeSegments');
-if isempty(def)
-    def = {};
-end
-
-% Call GUI
-inputstrMat = gui_erplab_deleteTimeSegments(def);  % GUI
-
-% Exit when CANCEL button is pressed
-if isempty(inputstrMat) && ~strcmp(inputstrMat,'')
-    commandHistory = 'User selected cancel';
-    return;
-end
-
-maxDistanceMS             = inputstrMat{1};
-startEventCodeBufferMS    = inputstrMat{2};
-endEventCodeBufferMS      = inputstrMat{3};
-%     displayFeedback     = inputstrMat{4};
-%
-%     erpworkingmemory('pop_erplab_deleteTimeSegments', ...
-%         {maxDistanceMS, startEventCodeBufferMS, endEventCodeBufferMS, displayFeedback});
-%
-
-% New output EEG name
-if length(EEG)==1
-    EEG.setname = [EEG.setname '_interpolated'];
-end
 
 
-
-[EEG, commandHistory] = pop_erplab_deleteTimeSegments(EEG, ...
-    'maxDistanceMS'             , maxDistanceMS,  ...
-    'startEventCodeBufferMS'    , startEventCodeBufferMS,   ...
-    'endEventCodeBufferMS'      , endEventCodeBufferMS,    ...
-    'History'                   , 'gui');
-
-
-return
+   
 end
